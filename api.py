@@ -71,7 +71,6 @@ def historycur(currency, id):
         json.dump(history, f)
     return history
 
-
 #fonction pour rafraichir les données 5 fois par minutes
 def refresh():
     for i in range(5):
@@ -87,4 +86,5 @@ print (pinged())
 #print (allusd())
 #print (allcur('eur'))
 #print(top5usd())
-print(historycur('eur', 'dogecoin'))
+#print(historycur('eur', 'dogecoin'))
+
