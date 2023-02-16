@@ -15,9 +15,11 @@ def ping():
         return False
 
 #print le retour de la fonction ping()
-print(ping())
+# fonction pour pinger l'API
+def pinged():
+    pinged =cg.ping()
+    return pinged
 
-pinged = cg.ping()
 
 #récupérer les 5 premières crypto-monnaies en USD
 def top5usd():
@@ -61,6 +63,13 @@ def allcur(currency):
         json.dump(all, f)
     return all
 
+#fonction de récupération de toutes l'historique d'une crypto-monnaie dans un fichier json avec la currency en paramètre
+def historycur(currency, id):
+    history = cg.get_coin_market_chart_by_id(id=id, vs_currency=currency, days=30)
+    #mise des information dans un fichier json du même nom que l'idi dans le dossier json du projet
+    with open('json/''histo-'+id+'.json', 'w') as f:
+        json.dump(history, f)
+    return history
 
 
 #fonction pour rafraichir les données 5 fois par minutes
@@ -72,9 +81,10 @@ def refresh():
 
 
 #test des fonctions
-print (ping())
+print (pinged())
 #print (top10usd())
 #print (top10cur('eur'))
 #print (allusd())
 #print (allcur('eur'))
-print(top5usd())
+#print(top5usd())
+print(historycur('eur', 'dogecoin'))
