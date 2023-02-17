@@ -3,7 +3,7 @@ import json #importation de la librairie json
 from pycoingecko import CoinGeckoAPI
 cg = CoinGeckoAPI()
 
-#connexion à l'API de CoinGecko pour récupération du ping
+'''#connexion à l'API de CoinGecko pour récupération du ping
 def ping():
     try:
         r = requests.get('https://api.coingecko.com/api/v3/ping')
@@ -12,9 +12,9 @@ def ping():
         else:
             return False
     except:
-        return False
+        return False'''
 
-#print le retour de la fonction ping()
+
 # fonction pour pinger l'API
 def pinged():
     pinged =cg.ping()
@@ -71,6 +71,14 @@ def historycur(currency, id):
         json.dump(history, f)
     return history
 
+#fonction de récupération de tout l'historique d'une crypto-monnaie
+def historyall(id):
+    history = cg.get_coin_market_chart_by_id(id=id, vs_currency='usd', days=1095)
+    #mise des information dans un fichier json du même nom que l'idi dans le dossier json du projet
+    with open('json/''histo-all-'+id+'.json', 'w') as f:
+        json.dump(history, f)
+    return history
+
 #fonction pour rafraichir les données 5 fois par minutes
 def refresh():
     for i in range(5):
@@ -87,4 +95,4 @@ print (pinged())
 #print (allcur('eur'))
 #print(top5usd())
 #print(historycur('eur', 'dogecoin'))
-
+historyall('bitcoin')
