@@ -16,6 +16,13 @@ def pinged():
 # restructuration du fichier api.py avec un choix de fonctions prédéfinies#
 ###########################################################################
 
+# fonction pour récupérer la date du jour
+def date_jour():
+    date_jour = datetime.date.today()
+    return date_jour
+
+
+
 # fonction pour récupérer la liste de tous les coins
 def allcoin(currency):
     all = cg.get_coins_list()
@@ -83,13 +90,32 @@ def history2(id1, id2, currency, date1, date2):
         json.dump(history2, f)
     return history1, history2
 
+# fonction pour récupérer les fiats disponibles
+def fiats():
+    fiats = cg.get_supported_vs_currencies()
+    return fiats
 
+
+
+def currencies():
+    currencies = cg.get_supported_vs_currencies()
+    return currencies
 
 #fonction pour rafraichir les données 5 fois par minutes
-def refresh():
+def refresh(currency, id1, id2, start_date, end_date):
+    currency = currency
+    id1 = id1
+    id2 = id2
+    start_date = start_date
+    end_date = end_date
+
     for i in range(5):
-        top10()
-        all()
+        allcoin(currency)
+        top10(currency)
+        top5(currency)
+        history(id1, currency)
+        marketcap(id1, currency, start_date, end_date)
+        history2(id1, id2, currency, start_date, end_date)
         time.sleep(12)
 
 #test des fonctions
@@ -104,4 +130,4 @@ print (pinged())
 #allcoin('usd')
 #history('bitcoin', 'eur')
 #marketcap('bitcoin', 'eur', '01/01/2020', '01/01/2021')
-history2('bitcoin', 'ethereum', 'eur', '01/01/2020', '01/01/2021')
+#history2('bitcoin', 'ethereum', 'eur', '01/01/2020', '01/01/2021')
