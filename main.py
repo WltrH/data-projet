@@ -43,7 +43,7 @@ end_date = st.sidebar.date_input('Choisir la date de fin', value=date_jour)
 
 if st.sidebar.button('Mettre à jour les données'):
     # mise à jour des données
-    api.refresh(currency, id1, id2, start_date, end_date)
+    api.refresh2(currency, id1, id2, start_date, end_date)
     # affichage d'un message de confirmation
     st.sidebar.success('Données mises à jour')
 
@@ -78,29 +78,47 @@ df['price_change_percentage_7d_in_currency'] = df['price_change_percentage_7d_in
 df['current_price'] = df['current_price'].apply(lambda x: str(round(x, 6)) + ' €')
 df['total_volume'] = df['total_volume'].apply(lambda x: str(round(x, 2)) + ' €')
 df['market_cap'] = df['market_cap'].apply(lambda x: str(round(x, 2)) + ' €')
-
-# mise en place d'un graphiqe plot sur le prix de la crypto monnaie sur les 7 derniers jours
-
-
 # renommage des colonnes
 df = df.rename(columns={'name': 'Nom', 'current_price': 'Prix', 'total_volume': 'Volume', 'market_cap': 'Capitalisation', 'price_change_percentage_1h_in_currency': '%1h', 'price_change_percentage_24h_in_currency': '%24h', 'price_change_percentage_7d_in_currency': '%7j'})
 st.table(df)
 
+# separation des graphiques
+st.markdown('---')
+
+# titre du graphique
+st.subheader("Capitalisation des 10 premières crypto-monnaies")
+
 # graphique des capitalisations des 10 premières crypto monnaies
-fig1, ax1 = plt.subplots()
-ax1.plot()
 df = pd.read_json('json/top10.json')
-df = df[['name', 'market_cap']]
-df = df.rename(columns={'name': 'Nom', 'market_cap': 'Capitalisation'})
-df = df.sort_values(by='Capitalisation', ascending=False)
-plt.figure(figsize=(10, 5))
-sns.barplot(x='Nom', y='Capitalisation', data=df)
-plt.xticks(rotation=90)
-plt.title('Capitalisation des 10 premières crypto monnaies')
-st.pyplot()
+fig1, ax1 = plt.subplots(figsize=(10, 5))
+ax1.bar(df['name'], df['market_cap'])
+ax1.set_xlabel('Nom')
+ax1.set_ylabel('Capitalisation')
+ax1.set_title('Capitalisation des 10 premières crypto monnaies')
+plt.legend()
+st.pyplot(fig1)
 
 # intégration d'un séparateur
 st.markdown('---')
+
+# titre du graphique
+st.subheader("Volume des 10 premières crypto monnaies")
+
+# graphique des volumes des 10 premières crypto monnaies
+df = pd.read_json('json/top10.json')
+fig, ax = plt.subplots(figsize=(10, 5))
+#ax = sns.pairplot(df, x_vars='name', y_vars='total_volume', height=5, aspect=2)
+ax.bar(df['name'], df['total_volume'])
+ax.set_xlabel('Nom')
+ax.set_ylabel('Volume')
+ax.set_title('Volume des 10 premières crypto monnaies')
+plt.legend()
+st.pyplot(fig)
+
+
+
+st.markdown('---')
+
 
 # création d'un graphique sur l'historique d'une crypto monnaie
 st.subheader("Historique d'une crypto monnaie")

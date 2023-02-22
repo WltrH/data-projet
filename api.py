@@ -117,6 +117,21 @@ def refresh(currency, id1, id2, start_date, end_date):
         marketcap(id1, currency, start_date, end_date)
         history2(id1, id2, currency, start_date, end_date)
         time.sleep(12)
+# fonction pour rafraichir les données
+def refresh2(currency, id1, id2, start_date, end_date):
+    currency = currency
+    id1 = id1
+    id2 = id2
+    start_date = start_date
+    end_date = end_date
+
+    allcoin(currency)
+    top10(currency)
+    top5(currency)
+    history(id1, currency)
+    marketcap(id1, currency, start_date, end_date)
+    history2(id1, id2, currency, start_date, end_date)
+
 
 #test des fonctions
 print (pinged())
