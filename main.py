@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
 import api as api
 import datetime
 import warnings
@@ -104,13 +106,9 @@ st.subheader("Capitalisation des 10 premières crypto-monnaies")
 
 # graphique des capitalisations des 10 premières crypto monnaies
 df = pd.read_json('json/top10.json')
-fig1, ax1 = plt.subplots(figsize=(10, 5))
-ax1.bar(df['name'], df['market_cap'])
-ax1.set_xlabel('Nom')
-ax1.set_ylabel('Capitalisation')
-ax1.set_title('Capitalisation des 10 premières crypto monnaies')
-
-st.pyplot(fig1)
+# graphique en barre des capitalisations des 10 premières crypto monnaies
+fig = px.bar(df, x='name', y='market_cap')
+st.plotly_chart(fig)
 
 # intégration d'un séparateur
 st.markdown('---')
@@ -119,16 +117,10 @@ st.markdown('---')
 st.subheader("Volume des 10 premières crypto monnaies")
 
 # graphique des volumes des 10 premières crypto monnaies
-df = pd.read_json('json/top10.json')
-fig, ax = plt.subplots(figsize=(10, 5))
-#ax = sns.pairplot(df, x_vars='name', y_vars='total_volume', height=5, aspect=2)
-ax.bar(df['name'], df['total_volume'])
-ax.set_xlabel('Nom')
-ax.set_ylabel('Volume')
-ax.set_title('Volume des 10 premières crypto monnaies')
+fig = px.pie(df, values='total_volume', names='name')
+st.plotly_chart(fig)
 
-st.pyplot(fig)
-
+st.markdown('---')
 ################### HISTO ####################
 # test des graphiques
 st.subheader("Historique des prix")
@@ -189,8 +181,39 @@ df['date'] = df['date'].dt.strftime('%Y-%m-%d')
 #mise de la date en index
 df.set_index('date', inplace=True)
 
+# mettre le dtype de l'index en datetime
+df.index = pd.to_datetime(df.index)
 
-with chart_container(df):
-    st.write("## Chart")
-    st.area_chart(df[["price"]])
+fig = px.line(df, x=df.index, y='price',color_discrete_sequence=['#f4d03f'])
+st.plotly_chart(fig)
+
+# slider pour choisir la période
+st.slider('Période', 1, 10, 5)
+#affichage du graphique en relation avec le slider
+fig = px.line(df, x=df.index, y='price',color_discrete_sequence=['#f4d03f'])
+st.plotly_chart(fig)
+
+plt.figure(figsize=(15, 5))
+fig, ax = plt.subplots(figsize=(15, 5))
+ax = df.loc['2020','price'].plot(label='prix 2020')
+ax = df.loc['2020','price'].resample('M').mean().plot(label='prix moyen par mois 2020', ls='--', lw=3, alpha=0.5)
+ax = df.loc['2020','price'].resample('W').mean().plot(label='prix moyen par semaine 2020', ls=':', lw=3, alpha=0.5)
+st.pyplot(fig)
+
+st.markdown('---')
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=df['2020'], y=df['price'], name='prix 2020', line=dict(color='#f4d03f', width=2)))
+fig.add_trace(go.Scatter(x=df['2020'], y=df['price'].resample('M').mean(), name='prix moyen par mois 2020', line=dict(color='royalblue', width=2)))
+fig.add_trace(go.Scatter(x=df['2020'], y=df['price'].resample('W').mean(), name='prix moyen par semaine 2020', line=dict(color='green', width=2)))
+
+#edition de la figure
+fig.update_layout(title = 'Evolution du prix du bitcoin en 2020',
+                    xaxis_title = 'Date',
+                    yaxis_title = 'Prix')
+st.plotly_chart(fig)
+#separation des graphiques
+st.markdown('---')
+
+#titre du graphique
+st.subheader("Capitalisation du marché")
 

@@ -63,7 +63,7 @@ def history(id, currency, date1, date2):
     for i in history:
         i[0] = datetime.datetime.fromtimestamp(i[0]/1000).strftime('%Y-%m-%d %H:%M:%S')
     history = [tuple(i) for i in history]
-    
+
 
     #mise des information dans un fichier json du même nom que l'idi dans le dossier json du projet
     with open('json/''histo-'+id+'-'+currency+'.json', 'w') as f:
@@ -101,6 +101,9 @@ def history2(id1, id2, currency, date1, date2):
     # mise des données de history1 dans un fichier json
     with open('json/''histo-'+id1+'-'+currency+'.json', 'w') as f:
         json.dump(history1, f)
+    
+    with open('json/''histo-'+id2+'-'+currency+'.json', 'w') as f:
+        json.dump(history2, f)
 
     #mise des information dans un fichier json du même nom que l'idi dans le dossier json du projet
     with open('json/''histo-'+id1+'-'+id2+'-'+currency+'.json', 'w') as f:
