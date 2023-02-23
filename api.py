@@ -47,13 +47,23 @@ def top5(currency):
     return top5
 
 # fonction pour récupérer l'historique d'une monnaie entre deux dates dans la currency choisie
-def history(id, currency):
-    # transformation des dates en timestamp
-    date1 = int(time.mktime(datetime.datetime.strptime("01/01/2020", "%d/%m/%Y").timetuple()))
-    date2 = int(time.mktime(datetime.datetime.strptime("01/01/2021", "%d/%m/%Y").timetuple()))
+def history(id, currency, date1, date2):
 
+    # transformation des dates en timestamp
+    date1 = int(time.mktime(datetime.datetime.strptime(date1, "%Y/%m/%d").timetuple()))
+    date2 = int(time.mktime(datetime.datetime.strptime(date2, "%Y/%m/%d").timetuple()))
+    print(date1)
+    print(date2)
     # récupération des données
     history = cg.get_coin_market_chart_range_by_id(id=id, vs_currency=currency, from_timestamp=date1, to_timestamp=date2)
+
+    # mise en forme des données de history
+    history = history['prices']
+    history = [list(i) for i in history]
+    for i in history:
+        i[0] = datetime.datetime.fromtimestamp(i[0]/1000).strftime('%Y-%m-%d %H:%M:%S')
+    history = [tuple(i) for i in history]
+    
 
     #mise des information dans un fichier json du même nom que l'idi dans le dossier json du projet
     with open('json/''histo-'+id+'-'+currency+'.json', 'w') as f:
@@ -63,8 +73,8 @@ def history(id, currency):
 # fonction pour récupérer le marketcap des 1O premières crypto-monnaies entre 2 dates dans la currency choisie
 def marketcap(id, currency, date1, date2):
     # transformation des dates en timestamp
-    date1 = int(time.mktime(datetime.datetime.strptime(date1, "%d/%m/%Y").timetuple()))
-    date2 = int(time.mktime(datetime.datetime.strptime(date2, "%d/%m/%Y").timetuple()))
+    date1 = int(time.mktime(datetime.datetime.strptime(date1, "%Y/%m/%d").timetuple()))
+    date2 = int(time.mktime(datetime.datetime.strptime(date2, "%Y/%m/%d").timetuple()))
 
 
     marketcap = cg.get_coin_market_chart_range_by_id(id=id, vs_currency=currency, from_timestamp=date1, to_timestamp=date2)
@@ -75,14 +85,22 @@ def marketcap(id, currency, date1, date2):
 
 # fonction pour récupérer l'historique de deux crypto-monnaies entre 2 dates dans la currency choisie
 def history2(id1, id2, currency, date1, date2):
+
+    # contrôle sur les dates
+    if date1 > date2 or date1 == date2:
+        date2  = date1 + 1
+
     # transformation des dates en timestamp
-    date1 = int(time.mktime(datetime.datetime.strptime(date1, "%d/%m/%Y").timetuple()))
-    date2 = int(time.mktime(datetime.datetime.strptime(date2, "%d/%m/%Y").timetuple()))
+    date1 = int(time.mktime(datetime.datetime.strptime(date1, "%Y/%m/%d").timetuple()))
+    date2 = int(time.mktime(datetime.datetime.strptime(date2, "%Y/%m/%d").timetuple()))
 
     # récupération des données
     history1 = cg.get_coin_market_chart_range_by_id(id=id1, vs_currency=currency, from_timestamp=date1, to_timestamp=date2)
     history2 = cg.get_coin_market_chart_range_by_id(id=id2, vs_currency=currency, from_timestamp=date1, to_timestamp=date2)
 
+    # mise des données de history1 dans un fichier json
+    with open('json/''histo-'+id1+'-'+currency+'.json', 'w') as f:
+        json.dump(history1, f)
 
     #mise des information dans un fichier json du même nom que l'idi dans le dossier json du projet
     with open('json/''histo-'+id1+'-'+id2+'-'+currency+'.json', 'w') as f:
@@ -99,6 +117,7 @@ def fiats():
 
 def currencies():
     currencies = cg.get_supported_vs_currencies()
+
     return currencies
 
 #fonction pour rafraichir les données 5 fois par minutes
@@ -132,9 +151,8 @@ def refresh2(currency, id1, id2, start_date, end_date):
     marketcap(id1, currency, start_date, end_date)
     history2(id1, id2, currency, start_date, end_date)
 
-
 #test des fonctions
-print (pinged())
+#print (pinged())
 #print (top10usd())
 #print (top10cur('eur'))
 #print (allusd())
@@ -143,6 +161,9 @@ print (pinged())
 #print(historycur('eur', 'dogecoin'))
 #historyall('bitcoin')
 #allcoin('usd')
-#history('bitcoin', 'eur')
-#marketcap('bitcoin', 'eur', '01/01/2020', '01/01/2021')
+#top10('eur')
+#top5('eur')
+#history('poly', 'eur', '2020/01/01', '2020/12/31')
+#marketcap('bitcoin', 'eur', '01/01/2020', '01/01/2021')bitcoin, ethereum, ripple, tether, 
 #history2('bitcoin', 'ethereum', 'eur', '01/01/2020', '01/01/2021')
+#print(currencies())
