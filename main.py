@@ -56,13 +56,22 @@ if (end_date - start_date).days > 30:
 if st.sidebar.button('Mettre à jour les données'):
     # mise à jour des données
     #api.refresh2(currency, id1, id2, start_date, end_date)
-    api.top10(currency)
+    #api.top10(currency)
     api.allcoin(currency)
     #api.history(id1, currency, start_date, end_date)
     ##api.marketcap(id1, currency, start_date, end_date)
     api.history2(id1, id2, currency, start_date, end_date)
     ## affichage d'un message de confirmation
     st.sidebar.success('Données mises à jour')
+
+#titre du bouton
+st.sidebar.subheader("Mettre à jour les données")
+# si le bouton est cliqué
+if st.sidebar.button('Mettre à jour TOP10'):
+    # mise à jour des données
+    api.top10(currency)
+    # affichage d'un message de confirmation
+    st.success('Données mises à jour')
 
 # placement d'un séparateur
 st.sidebar.markdown('---')
@@ -98,6 +107,10 @@ df['market_cap'] = df['market_cap'].apply(lambda x: str(round(x, 2)) + ' €')
 # renommage des colonnes
 df = df.rename(columns={'name': 'Nom', 'current_price': 'Prix', 'total_volume': 'Volume', 'market_cap': 'Capitalisation', 'price_change_percentage_1h_in_currency': '%1h', 'price_change_percentage_24h_in_currency': '%24h', 'price_change_percentage_7d_in_currency': '%7j'})
 st.table(df)
+
+# bouton de mise à jour des données du tableau des top 10, centrer le bouton
+
+
 # separation des graphiques
 st.markdown('---')
 
@@ -107,7 +120,7 @@ st.subheader("Capitalisation des 10 premières crypto-monnaies")
 # graphique des capitalisations des 10 premières crypto monnaies
 df = pd.read_json('json/top10.json')
 # graphique en barre des capitalisations des 10 premières crypto monnaies
-fig = px.bar(df, x='name', y='market_cap')
+fig = px.bar(df, x='name', y='market_cap', color='market_cap', color_continuous_scale='Viridis')
 st.plotly_chart(fig)
 
 # intégration d'un séparateur
@@ -119,6 +132,8 @@ st.subheader("Volume des 10 premières crypto monnaies")
 # graphique des volumes des 10 premières crypto monnaies
 fig = px.pie(df, values='total_volume', names='name')
 st.plotly_chart(fig)
+
+
 
 st.markdown('---')
 ################### HISTO ####################
@@ -187,8 +202,6 @@ df.index = pd.to_datetime(df.index)
 fig = px.line(df, x=df.index, y='price',color_discrete_sequence=['#f4d03f'])
 st.plotly_chart(fig)
 
-# slider pour choisir la période
-st.slider('Période', 1, 10, 5)
 #affichage du graphique en relation avec le slider
 fig = px.line(df, x=df.index, y='price',color_discrete_sequence=['#f4d03f'])
 st.plotly_chart(fig)
@@ -214,6 +227,33 @@ st.plotly_chart(fig)
 #separation des graphiques
 st.markdown('---')
 
+
+
+#titre
+st.title('Evolution du prix du bitcoin en 2020')
+
+df1 = df.loc['2020','price'].resample('W').agg(['mean', 'std', 'min', 'max'])
+
+
+#enlever l'index de la colonne date
+df1.reset_index(inplace=True)
+df1['date'] = df1['date'].dt.strftime('%Y-%m-%d')
+
+st.table(df1.iloc[0:10])
+
+fig = px.line(df1, x='date', y=(['mean', 'min', 'max']), title='Time Series with Rangeslider')
+
+fig.update_xaxes(rangeslider_visible=True)
+
+st.plotly_chart(fig)
+
+fig = px.line(df1, x="date", y=df.columns,
+              hover_data={"date": "|%B %d, %Y"},
+              title='custom tick labels with ticklabelmode="period"')
+fig.update_xaxes(
+    dtick="M1",
+    tickformat="%b\n%Y",
+    ticklabelmode="period")
 #titre du graphique
 st.subheader("Capitalisation du marché")
 
