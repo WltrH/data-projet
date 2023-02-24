@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import altair as alt
 import plotly.express as px
 import plotly.graph_objects as go
 import api as api
@@ -138,7 +139,7 @@ st.plotly_chart(fig)
 st.markdown('---')
 ################### HISTO ####################
 # test des graphiques
-st.subheader("Historique des prix")
+st.subheader("Historique des prix du" + ' ' + id1 + ' ' + "en" + ' ' + currency)
 # exploration des dataframes avec streamlit_extras
 #récupération des données dans un dataframe
 df = pd.read_json('json/histo-bitcoin-eur.json')
@@ -193,18 +194,29 @@ df['date'] = pd.to_datetime(df['date'], unit='ms')
 #retirer les heures de la date
 df['date'] = df['date'].dt.strftime('%Y-%m-%d')
 
+########################################################################################
 #mise de la date en index
 df.set_index('date', inplace=True)
-
-# mettre le dtype de l'index en datetime
+# mise du titre à cette place pour ne pas avoir les heures dans le titre
+#titre du graphique
+st.subheader("Prix du Bitcoin" + ' ' + str(df.index[0]) + ' ' + 'au' + ' ' + str(df.index[-1]))
+# mise du dtype de l'index en datetime
 df.index = pd.to_datetime(df.index)
+########################################################################################
 
-fig = px.line(df, x=df.index, y='price',color_discrete_sequence=['#f4d03f'])
+#affichage du graphique des prix du bitcoin
+fig = px.line(df, x=df.index, y='price',color_discrete_sequence=['#fe4a49'])
 st.plotly_chart(fig)
 
-#affichage du graphique en relation avec le slider
-fig = px.line(df, x=df.index, y='price',color_discrete_sequence=['#f4d03f'])
-st.plotly_chart(fig)
+########################################################################################
+#mise de la date en index
+#df.set_index('date', inplace=True)
+# misedu titre du graphique
+st.subheader("Prix du Bitcoin" + ' ' + str(df.index[0]) + ' ' + 'au' + ' ' + str(df.index[-1]))
+# mise du dtype de l'index en datetime
+#df.index = pd.to_datetime(df.index)
+
+########################################################################################
 
 plt.figure(figsize=(15, 5))
 fig, ax = plt.subplots(figsize=(15, 5))
@@ -214,6 +226,9 @@ ax = df.loc['2020','price'].resample('W').mean().plot(label='prix moyen par sema
 st.pyplot(fig)
 
 st.markdown('---')
+
+
+
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=df['2020'], y=df['price'], name='prix 2020', line=dict(color='#f4d03f', width=2)))
 fig.add_trace(go.Scatter(x=df['2020'], y=df['price'].resample('M').mean(), name='prix moyen par mois 2020', line=dict(color='royalblue', width=2)))
@@ -247,13 +262,7 @@ fig.update_xaxes(rangeslider_visible=True)
 
 st.plotly_chart(fig)
 
-fig = px.line(df1, x="date", y=df.columns,
-              hover_data={"date": "|%B %d, %Y"},
-              title='custom tick labels with ticklabelmode="period"')
-fig.update_xaxes(
-    dtick="M1",
-    tickformat="%b\n%Y",
-    ticklabelmode="period")
+
 #titre du graphique
 st.subheader("Capitalisation du marché")
 
