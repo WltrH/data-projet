@@ -1,4 +1,5 @@
 import streamlit as st
+import time
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,117 +27,228 @@ st.title(page_title + " " + page_icon)
 
 ################### SIDEBAR ####################
 # variable de date du jour
-date_jour = datetime.date.today()
-date_jour_ = date_jour - datetime.timedelta(days=30)
 
 #liste des crypto monnaies bitcoin, ethereum, tether, ripple
 
-currencies = []
-currencies = [('bitcoin', 'ethereum', 'tether', 'ripple')]
+end_date = datetime.date.today()
+start_date = end_date - datetime.timedelta(days=1095)
 
+# mettre les données dans un dataframe en connectant directement à l'API
+#btc = pd.Dataframe(cg.get_coin_market_chart_range_by_id(id=id1, vs_currency=currency, from_timestamp=start_date, to_timestamp=end_date))
 # placement d'une liste déroulante pour choisir la currency en passant par la fonction api.currencies
-currency = st.sidebar.selectbox('Choisir la monnaie/fiat', ('eur','dollar'))
+currency = 'usd'
 
 # placement d'une liste pour choisir l'id de la crypto monnaie
-id1 = st.sidebar.selectbox('Choisir l\'id de la crypto monnaie', ('bitcoin', 'ethereum', 'tether', 'ripple'))
+id1 = 'bitcoin'
 
 # placement d'une case pour choisir le second id de la crypto monnaie, mise à eth en default
-id2 = st.sidebar.selectbox('Choisir l\'id de la crypto monnaie', ('bitcoin', 'ethereum', 'tether', 'ripple'), index=1)
+id2 =  'ethereum'
 
-# placement d'une case pour choisir la date de début, avec date du jour par défaut
-start_date = st.sidebar.date_input('Choisir la date de début', value=date_jour_)
+end_date_aff = end_date.strftime("%Y-%m-%d")
+start_date_aff = start_date.strftime("%Y-%m-%d")
 
-# placement d'une case pour choisir la date de fin
-end_date = st.sidebar.date_input('Choisir la date de fin', value=date_jour)
-
-# si les dates start_date et end_date ont un différenciel de plus de 30 jours alors on ajuste les dates
-if (end_date - start_date).days > 30:
-    # on ajuste la date de début à la date de fin - 30 jours
-    start_date = end_date - datetime.timedelta(days=30)
-
-if st.sidebar.button('Mettre à jour les données'):
-    # mise à jour des données
-    #api.refresh2(currency, id1, id2, start_date, end_date)
-    #api.top10(currency)
-    api.allcoin(currency)
-    #api.history(id1, currency, start_date, end_date)
-    ##api.marketcap(id1, currency, start_date, end_date)
-    api.history2(id1, id2, currency, start_date, end_date)
-    ## affichage d'un message de confirmation
-    st.sidebar.success('Données mises à jour')
-
-#titre du bouton
-st.sidebar.subheader("Mettre à jour les données")
-# si le bouton est cliqué
-if st.sidebar.button('Mettre à jour TOP10'):
-    # mise à jour des données
-    api.top10(currency)
-    # affichage d'un message de confirmation
-    st.success('Données mises à jour')
-
-# placement d'un séparateur
-st.sidebar.markdown('---')
-# placement d'un sous titre au millieu de la sidebar
-st.sidebar.subheader("Powered by :")
-# insertion d'une image dans la sidebar
-st.sidebar.image('img/logo.png', width=200)
+start_date = int(time.mktime(datetime.datetime.strptime(str(start_date), "%Y-%m-%d").timetuple()))
+end_date = int(time.mktime(datetime.datetime.strptime(str(end_date), "%Y-%m-%d").timetuple()))
 
 
-################### MAIN ####################
+# récupération des crypto monnaies
+bitcoin = api.get_btc(start_date, end_date)
+ethereum = api.get_eth(start_date, end_date)
+
+st.write(start_date, end_date)
+st.write(start_date_aff, end_date_aff)
 
 
-################### TOP 10 ####################
-st.subheader("Top 10 des crypto-monnaies")
+################################# Données du BTC ########################################
+with st.container():
 
-# création d'un tableau des 10 premières crypto monnaies, en partant du fichier json Top10
-# avec les colonnes suivantes : nom, prix, volume, capitalisation, %1h, %24h, %7j
-df = pd.read_json('json/top10.json')
-df = df[['name', 'current_price', 'total_volume', 'market_cap', 'price_change_percentage_1h_in_currency', 'price_change_percentage_24h_in_currency', 'price_change_percentage_7d_in_currency']]
-
-# renommer les colonnes
-#df = df.rename(columns={'name': 'Nom', 'current_price': 'Prix', 'total_volume': 'Volume', 'market_cap': 'Capitalisation', 'price_change_percentage_1h_in_currency': '%1h', 'price_change_percentage_24h_in_currency': '%24h', 'price_change_percentage_7d_in_currency': '%7j'})
-
-# mise en forme des données en % pour les colonnes price_change_percentage_1h_in_currency, price_change_percentage_24h_in_currency, price_change_percentage_7d_in_currency
-df['price_change_percentage_1h_in_currency'] = df['price_change_percentage_1h_in_currency'].apply(lambda x: str(round(x, 2)) + '%')
-df['price_change_percentage_24h_in_currency'] = df['price_change_percentage_24h_in_currency'].apply(lambda x: str(round(x, 2)) + '%')
-df['price_change_percentage_7d_in_currency'] = df['price_change_percentage_7d_in_currency'].apply(lambda x: str(round(x, 2)) + '%')
-
-#mise en forme des données en € pour les colonnes current_price, total_volume, market_cap
-df['current_price'] = df['current_price'].apply(lambda x: str(round(x, 6)) + ' €')
-df['total_volume'] = df['total_volume'].apply(lambda x: str(round(x, 2)) + ' €')
-df['market_cap'] = df['market_cap'].apply(lambda x: str(round(x, 2)) + ' €')
-# renommage des colonnes
-df = df.rename(columns={'name': 'Nom', 'current_price': 'Prix', 'total_volume': 'Volume', 'market_cap': 'Capitalisation', 'price_change_percentage_1h_in_currency': '%1h', 'price_change_percentage_24h_in_currency': '%24h', 'price_change_percentage_7d_in_currency': '%7j'})
-st.table(df)
-
-# bouton de mise à jour des données du tableau des top 10, centrer le bouton
+    st.write('DataFrame bictoin')
+    # transformation des dates en timestamp
 
 
-# separation des graphiques
-st.markdown('---')
+   #bitcoin = api.get_btc(start_date, end_date)
+    #st.table(bitcoin)
+    btc = pd.DataFrame(bitcoin)
+    # mise en forme du dataframe pour faire une colonne date
+    btc[['date', 'price']] = btc['prices'].apply(lambda x: pd.Series([x[0], x[1]])).add_prefix('price_')
+    btc[['date', 'market_cap']] = btc['market_caps'].apply(lambda x: pd.Series([x[0], x[1]])).add_prefix('market_cap_')
+    btc[['date', 'total_volume']] = btc['total_volumes'].apply(lambda x: pd.Series([x[0], x[1]])).add_prefix('total_volume_')
 
-# titre du graphique
-st.subheader("Capitalisation des 10 premières crypto-monnaies")
+    # mise en format de la date
+    btc['date'] = btc['date'].apply(lambda x: datetime.datetime.fromtimestamp(x/1000).strftime('%Y-%m-%d %H:%M:%S'))
 
-# graphique des capitalisations des 10 premières crypto monnaies
-df = pd.read_json('json/top10.json')
-# graphique en barre des capitalisations des 10 premières crypto monnaies
-fig = px.bar(df, x='name', y='market_cap', color='market_cap', color_continuous_scale='Viridis')
-st.plotly_chart(fig)
+    # enlever les heures et les minutes de la date
+    btc['date'] = btc['date'].apply(lambda x: x.split(' ')[0])
 
-# intégration d'un séparateur
-st.markdown('---')
+    
+    # garder uniquement les colonnes qui nous intéressent
+    btc = btc[['date', 'price', 'market_cap', 'total_volume']]
 
-# titre du graphique
-st.subheader("Volume des 10 premières crypto monnaies")
+    #changement des noms des colonnes
+    btc = btc.rename(columns={'date': 'Date', 'price': 'Prix', 'market_cap': 'Capitalisation', 'total_volume': 'Volume total'})
 
-# graphique des volumes des 10 premières crypto monnaies
-fig = px.pie(df, values='total_volume', names='name')
-st.plotly_chart(fig)
+    #mise en forme des données avec le symbol de la currency
+    btc['Prix'] = btc['Prix'].apply(lambda x: str(round(x, 2)) + ' $')
+    btc['Capitalisation'] = btc['Capitalisation'].apply(lambda x: str(round(x, 2)) + ' $')
+    btc['Volume total'] = btc['Volume total'].apply(lambda x: str(round(x, 2)) + ' $')
+
+    st.write(btc)
 
 
 
-st.markdown('---')
+################################# Données de ETH ########################################
+with st.container():
+
+    st.write('DataFrame ethereum')
+    
+    #eth = api.get_eth(start_date, end_date)
+    eth = pd.DataFrame(ethereum)
+
+    # mise en forme du dataframe pour faire une colonne date
+    eth[['date', 'price']] = eth['prices'].apply(lambda x: pd.Series([x[0], x[1]])).add_prefix('price_')
+    eth[['date', 'market_cap']] = eth['market_caps'].apply(lambda x: pd.Series([x[0], x[1]])).add_prefix('market_cap_')
+    eth[['date', 'total_volume']] = eth['total_volumes'].apply(lambda x: pd.Series([x[0], x[1]])).add_prefix('total_volume_')
+
+    # mise en format de la date
+    eth['date'] = eth['date'].apply(lambda x: datetime.datetime.fromtimestamp(x/1000).strftime('%Y-%m-%d %H:%M:%S'))
+
+    # enlever les heures et les minutes de la date
+    eth['date'] = eth['date'].apply(lambda x: x.split(' ')[0])
+
+    # garder uniquement les colonnes qui nous intéressent
+    eth = eth[['date', 'price', 'market_cap', 'total_volume']]
+
+    #changement des noms des colonnes
+    eth = eth.rename(columns={'date': 'Date', 'price': 'Prix', 'market_cap': 'Capitalisation', 'total_volume': 'Volume total'})
+
+    #mise en forme des données avec le symbol de la currency
+    eth['Prix'] = eth['Prix'].apply(lambda x: str(round(x, 2)) + ' $')
+    eth['Capitalisation'] = eth['Capitalisation'].apply(lambda x: str(round(x, 2)) + ' $')
+    eth['Volume total'] = eth['Volume total'].apply(lambda x: str(round(x, 2)) + ' $')
+
+
+    st.write(eth)
+
+
+################### Données du TOP 10 ####################
+
+with st.container():
+    st.write('TOP10 des Crypto monnaies par capitalisation')
+    # récuéprer les données dans un dataframe le top10 du marché
+    #top10 = pd.DataFrame(cg.get_coins_markets(vs_currency=currency, order='market_cap_desc', per_page=10, page=1, sparkline=False, price_change_percentage='1h,24h,7d'))
+    top10 = api.get_top10(currency)
+    top10 = pd.DataFrame(top10)
+    #mise en forme du dataframe top10 pour ne récupérer que les colonnes qui nous intéressent
+    top10 = top10[['id','market_cap', 'current_price', 'fully_diluted_valuation', 'total_volume', 'high_24h', 'low_24h', 'price_change_24h', 'price_change_percentage_24h', 'market_cap_change_24h', 'market_cap_change_percentage_24h', 'circulating_supply', 'total_supply']]
+    # renommer les colonnes
+    top10 = top10.rename(columns={'id': 'Nom', 'current_price': 'Prix', 'market_cap': 'Capitalisation', 'fully_diluted_valuation': 'Valeur totale', 'total_volume': 'Volume total', 'high_24h': 'Haut 24h', 'low_24h': 'Bas 24h', 'price_change_24h': 'Variation 24h', 'price_change_percentage_24h': 'Variation % 24h', 'market_cap_change_24h': 'Variation capitalisation 24h', 'market_cap_change_percentage_24h': 'Variation capitalisation % 24h', 'circulating_supply': 'Circulation', 'total_supply': 'Total'})
+    # mettre en forme les données en avec le symbol de la currency
+    top10['Prix'] = top10['Prix'].apply(lambda x: str(round(x, 6)) + ' $')
+    top10['Capitalisation'] = top10['Capitalisation'].apply(lambda x: str(round(x, 2)) + ' $')
+    top10['Valeur totale'] = top10['Valeur totale'].apply(lambda x: str(round(x, 2)) + ' $')
+    top10['Volume total'] = top10['Volume total'].apply(lambda x: str(round(x, 2)) + ' $')
+    top10['Haut 24h'] = top10['Haut 24h'].apply(lambda x: str(round(x, 2)) + ' $')
+    top10['Bas 24h'] = top10['Bas 24h'].apply(lambda x: str(round(x, 2)) + ' $')
+    top10['Variation 24h'] = top10['Variation 24h'].apply(lambda x: str(round(x, 2)) + ' $')
+    top10['Variation capitalisation 24h'] = top10['Variation capitalisation 24h'].apply(lambda x: str(round(x, 2)) + ' $')
+
+
+    # mettre en forme les données en pourcentage
+    top10['Variation % 24h'] = top10['Variation % 24h'].map('{:,.2f}%'.format)
+    top10['Variation capitalisation % 24h'] = top10['Variation capitalisation % 24h'].map('{:,.2f}%'.format)
+
+
+    st.write(top10)
+
+with st.container():
+    # Titre
+    st.subheader("Graphique sur le TOP 10 au dessus")
+
+    # récuéprer les données dans un dataframe le top10 du marché
+    top10 = api.get_top10(currency)
+    top10 = pd.DataFrame(top10)
+    #mise en forme du dataframe top10 pour ne récupérer que les colonnes qui nous intéressent
+    top10 = top10[['id','market_cap', 'current_price', 'fully_diluted_valuation', 'total_volume', 'high_24h', 'low_24h', 'price_change_24h', 'price_change_percentage_24h', 'market_cap_change_24h', 'market_cap_change_percentage_24h', 'circulating_supply', 'total_supply']]
+    # renommer les colonnes
+    top10 = top10.rename(columns={'id': 'Nom', 'current_price': 'Prix', 'market_cap': 'Capitalisation', 'fully_diluted_valuation': 'Valeur totale', 'total_volume': 'Volume total', 'high_24h': 'Haut 24h', 'low_24h': 'Bas 24h', 'price_change_24h': 'Variation 24h', 'price_change_percentage_24h': 'Variation % 24h', 'market_cap_change_24h': 'Variation capitalisation 24h', 'market_cap_change_percentage_24h': 'Variation capitalisation % 24h', 'circulating_supply': 'Circulation', 'total_supply': 'Total'})
+
+    st.subheader("Histogramme de la Capitalisation des 10 premières crypto-monnaies")
+    # graphique en barre des capitalisations des 10 premières crypto monnaies
+    fig = px.bar(top10, x='Nom', y='Capitalisation', color='Capitalisation', color_continuous_scale='Viridis')
+    st.plotly_chart(fig)
+
+    st.subheader("Camembert du Volume des 10 premières crypto-monnaies")
+    # graphique en camembert des volumes des 10 premières crypto monnaies
+    fig = px.pie(top10, values='Volume total', names='Nom')
+    st.plotly_chart(fig)
+
+    st.markdown('---')
+
+with st.container():
+    # mise de start_date et end_date au format date sans l'heure
+    #start_date = datetime.strptime(start_date, '%Y-%m-%d')
+    #end_date = datetime.strptime(end_date, '%Y-%m-%d')
+    # Titre
+    st.subheader("Historique des prix du" + ' ' + id1 + ' ' + "en" + ' ' + currency + ' ' + "du" + ' ' + start_date_aff + ' ' + "au" + ' ' + end_date_aff)
+
+    # récupération des données dans un dataframe
+    btc = pd.DataFrame(bitcoin)
+
+    # mise en forme du dataframe pour faire une colonne date
+    btc[['date', 'price']] = btc['prices'].apply(lambda x: pd.Series([x[0], x[1]])).add_prefix('price_')
+    btc[['date', 'market_cap']] = btc['market_caps'].apply(lambda x: pd.Series([x[0], x[1]])).add_prefix('market_cap_')
+    btc[['date', 'total_volume']] = btc['total_volumes'].apply(lambda x: pd.Series([x[0], x[1]])).add_prefix('total_volume_')
+
+    # suppréssion des colonnes prices, market_caps et total_volumes
+    btc = btc.drop(['prices', 'market_caps', 'total_volumes'], axis=1)
+
+    #mise au format date sans mes minutes et secondes
+    btc['date'] = pd.to_datetime(btc['date'], unit='ms')
+    btc['date'] = btc['date'].dt.strftime('%Y-%m-%d')
+
+    st.write(btc)
+
+    # graphique en ligne du prix du bitcoin en fonction de la date
+    fig = px.line(btc, x='date', y='price', title='Prix du Bitcoin en fonction de la date')
+    fig.update_xaxes(rangeslider_visible=True)
+    st.plotly_chart(fig)
+
+    st.markdown('---')
+    st.subheader('Moyenne des prix du Bitcoin')
+    st.write(btc)
+
+    # prendre que la plus petite année
+    start_date1 = start_date_aff[0:4]
+    end_date1 = end_date_aff[0:4]
+
+    st.write(start_date1, end_date1)
+
+    # création d'un dataframe avec la date, la moyenne, l'écart type, le min et le max des prix du bitcoin
+    btc1 = btc.loc[start_date1:end_date1,'price'].resample('W').agg(['mean', 'std', 'min', 'max'])
+    st.write(btc1)
+
+    #btc1 = btc.loc[start_date1:end_date1,'price'].resample('W').agg(['mean', 'std', 'min', 'max'])
+    #st.write(btc1)
+
+    # calcul de la moyenne des prix du bitcoin en fonction de la date
+    #btc1 = btc.loc[start_date:end_date,'price'].resample('W').agg(['mean', 'std', 'min', 'max'])
+
+    # mise de la date en index
+    #btc1.reset_index('date')
+    #btc1['date'] = btc1['date'].dt.strftime('%Y-%m-%d')
+
+    #st.write(btc1)
+
+    #figure de la moyenne, min et max des prix du bitcoin en fonction de la date
+    #fig = px.line(btc1, x='date', y=(['mean', 'min', 'max']), title='Time Series with Rangeslider')
+    #fig.update_xaxes(rangeslider_visible=True)
+    #st.plotly_chart(fig)
+
+    
+
+    
+
+    st.markdown('---')
 ################### HISTO ####################
 # test des graphiques
 st.subheader("Historique des prix du" + ' ' + id1 + ' ' + "en" + ' ' + currency)
@@ -170,9 +282,9 @@ df['market_cap'] = df['market_cap'].apply(lambda x: '{:,.2f}'.format(x))
 df['total_volume'] = df['total_volume'].apply(lambda x: '{:,.2f}'.format(x))
 
 # mise du dataframe au format euro
-df['price'] = df['price'].apply(lambda x: x + ' €')
-df['market_cap'] = df['market_cap'].apply(lambda x: x + ' €')
-df['total_volume'] = df['total_volume'].apply(lambda x: x + ' €')
+df['price'] = df['price'].apply(lambda x: x + ' $')
+df['market_cap'] = df['market_cap'].apply(lambda x: x + ' $')
+df['total_volume'] = df['total_volume'].apply(lambda x: x + ' $')
 
 st.table(df.iloc[0:10])
 # separation des graphiques
@@ -196,12 +308,15 @@ df['date'] = df['date'].dt.strftime('%Y-%m-%d')
 
 ########################################################################################
 #mise de la date en index
+st.write('LA ICI COUCOU')
 df.set_index('date', inplace=True)
 # mise du titre à cette place pour ne pas avoir les heures dans le titre
 #titre du graphique
 st.subheader("Prix du Bitcoin" + ' ' + str(df.index[0]) + ' ' + 'au' + ' ' + str(df.index[-1]))
 # mise du dtype de l'index en datetime
 df.index = pd.to_datetime(df.index)
+
+st.write(df)
 ########################################################################################
 
 #affichage du graphique des prix du bitcoin
@@ -251,6 +366,8 @@ df1 = df.loc['2020','price'].resample('W').agg(['mean', 'std', 'min', 'max'])
 
 
 #enlever l'index de la colonne date
+
+st.write('ICI')
 df1.reset_index(inplace=True)
 df1['date'] = df1['date'].dt.strftime('%Y-%m-%d')
 
@@ -265,4 +382,3 @@ st.plotly_chart(fig)
 
 #titre du graphique
 st.subheader("Capitalisation du marché")
-
