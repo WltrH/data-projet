@@ -2,6 +2,7 @@ import streamlit as st
 import time
 import pandas as pd
 import numpy as np
+import seaborn as sns
 import matplotlib.pyplot as plt
 import altair as alt
 import plotly.express as px
@@ -124,7 +125,7 @@ with st.container():
 ################### EXCHANGES ####################
 with st.container():
 # Titre sur l'exchange Binance
-    st.subheader("Exchanges")
+    st.subheader("Dataset des Exchanges mis en forme")
 
     #mise en forme du dataframe
 
@@ -134,8 +135,7 @@ with st.container():
     exchange = exchange[['id', 'name', 'year_established', 'country', 'trust_score', 'trade_volume_24h_btc', 'trade_volume_24h_btc_normalized']]
 
     st.write(exchange)
-    # mise en place d'une map avec la localisation des exchanges
-    st.subheader("Localisation des exchanges")
+    # mise en place d'une map avec la localisation des exchanges    
     # récupération des données dans un dataframe
     exchange = pd.DataFrame(exchange)
     #Mise en forme du dataframe des exchanges pour ne récupérer que les colonnes qui nous intéressent
@@ -149,150 +149,81 @@ with st.container():
     exchange['Score de confiance'] = exchange['Score de confiance'].map('{:,.2f}%'.format)
     #mise en forme des données en pourcentage
     exchange['Année de création'] = exchange['Année de création'].map('{:,.0f}'.format)
-
-
-
-
-  
     
 
-
-    
 
     st.markdown('---')
-################### HISTO ####################
-# test des graphiques
-st.subheader("Historique des prix du" + ' ' + id1 + ' ' + "en" + ' ' + currency)
-# exploration des dataframes avec streamlit_extras
-#récupération des données dans un dataframewx
-# separation des graphiques
-st.markdown('---')
 
-df = pd.read_json('json/histo-bitcoin-eur.json')
-st.header('BTC')
-st.write(btc)
-st.header('DF')
-st.write(df)
+with st.container ():
+    # création d'une map avec folium pour faire la localisation des exchanges
 
+    # création d'un nouveau dataset regroupant les pays des exchanges et leur position géographique
+    df = pd.DataFrame(exchange['Pays'].value_counts())
+    df = df.reset_index()
+    df = df.rename(columns={'index': 'Pays', 'Pays': 'Nombre d\'exchanges'})
+    df = df.sort_values(by='Nombre d\'exchanges', ascending=False)
+    df = df.head(100)
+    df = df.reset_index()
+    df = df.drop(columns=['index'])
+    df = df.rename(columns={'Pays': 'Country'})
 
-#création d'un dataframe avec les données de la colonne prices, market_caps et total_volumes avec séparation de la date
-df[['date', 'price']] = df['prices'].apply(lambda x: pd.Series([x[0], x[1]])).add_prefix('price_')
-df[['date', 'market_cap']] = df['market_caps'].apply(lambda x: pd.Series([x[0], x[1]])).add_prefix('market_cap_')
-df[['date', 'total_volume']] = df['total_volumes'].apply(lambda x: pd.Series([x[0], x[1]])).add_prefix('total_volume_')
+    #st.write(df)
 
-#suppression des colonnes inutiles
-df.drop(['prices', 'market_caps', 'total_volumes'], axis=1, inplace=True)
+    # nouveau dataframe avec les données du csv worldcities.csv
+    df2 = pd.read_csv('worldcities.csv')
+    #st.write(df2)
 
-st.header('DF APRES TRAITEMENT')
-st.write(df)
+    # merge entre df et df2 pour récupérer que la colonne city si le pays est le même
+    df = pd.merge(df, df2, how='left', left_on='Country', right_on='country')
+    # garder que les lignes avec capital = primary
+    df = df[df['capital'] == 'primary']
+    # on garde que les colonnes qui nous intéressent
+    df = df[['Country', 'Nombre d\'exchanges', 'city', 'lat', 'lng']]
+    # on renomme les colonnes pour pouvoir matcher avec la fonction map de streamlit
+    df = df.rename(columns={'city': 'City', 'lat': 'latitude', 'lng': 'longitude'})
+    #st.write(df)
 
-#mise aua format datetime de la colonne date
-df['date'] = pd.to_datetime(df['date'], unit='ms')
+    st.subheader("Localisation des exchanges")
+    # placement des points sur la map
+    st.map(df, zoom=1, use_container_width=True)
 
-#retirer les heures de la date
-df['date'] = df['date'].dt.strftime('%Y-%m-%d')
+    st.subheader("Camembert des exchanges par pays")
+    # figure pie avec les pays et le nombre d'exchanges présent
 
-st.header('DF APRES TRAITEMENT DE LA DATE')
-st.write(df)
-
-st.header('BTC APRES TRAITEMENT DE LA DATE en index')
-#mise de la date en index
-btc.set_index('date', inplace=True)
-st.write(btc)
-
-###############################ICI#########################################################
-#mise de la date en index
-st.write('LA ICI COUCOU')
-df.set_index('date', inplace=True)
-# mise du titre à cette place pour ne pas avoir les heures dans le titre
-#titre du graphique
-st.subheader("Prix du Bitcoin" + ' ' + str(df.index[0]) + ' ' + 'au' + ' ' + str(df.index[-1]))
-# mise du dtype de l'index en datetime
-df.index = pd.to_datetime(df.index)
-
-st.header('DF APRES TRAITEMENT DE LA DATE TO DATETIME')
-
-st.write(df)
-
-st.header('BTC APRES TRAITEMENT DE LA DATE TO DATETIME')
-btc.index = pd.to_datetime(btc.index)
-st.write(btc)
-########################################################################################
-st.header('FIGURE AVEC DF')
-#affichage du graphique des prix du bitcoin
-fig = px.line(df, x=df.index, y='price',color_discrete_sequence=['#fe4a49'])
-st.plotly_chart(fig)
-
-st.header('FIGURE AVEC BTC')
-#affichage du graphique des prix du bitcoin
-fig = px.line(btc, x=btc.index, y='price',color_discrete_sequence=['#fe4a49'])
-fig.update_xaxes(rangeslider_visible=True)
-st.plotly_chart(fig)
-
-########################################################################################
-#mise de la date en index
-#df.set_index('date', inplace=True)
-# misedu titre du graphique
-st.subheader("Prix du Bitcoin" + ' ' + str(df.index[0]) + ' ' + 'au' + ' ' + str(df.index[-1]))
-# mise du dtype de l'index en datetime
-#df.index = pd.to_datetime(df.index)
-
-########################################################################################
-
-plt.figure(figsize=(15, 5))
-fig, ax = plt.subplots(figsize=(15, 5))
-ax = df.loc['2020','price'].plot(label='prix 2020')
-ax = df.loc['2020','price'].resample('M').mean().plot(label='prix moyen par mois 2020', ls='--', lw=3, alpha=0.5)
-ax = df.loc['2020','price'].resample('W').mean().plot(label='prix moyen par semaine 2020', ls=':', lw=3, alpha=0.5)
-st.pyplot(fig)
-
-
+    fig = px.pie(df, values='Nombre d\'exchanges', names='Country')
+    st.plotly_chart(fig)
 
 st.markdown('---')
 
+with st.container():
+    # titre sur les scores de confiance des exchanges
+    st.subheader("Volumes d'échanges des exchanges")
+
+    # Garder que les 20 premiers exchanges
+    #exchange = exchange.head(20)
+
+    # figure en barre avec les volumes d'échanges des exchanges
+    fig = px.bar(exchange, x='Nom', y='Volume 24h', color='Volume 24h', color_continuous_scale='Viridis')
+    st.plotly_chart(fig)
+
+    st.subheader("Camembert sur volumes de trade des exchanges")
+    # figure pie avec les scores de confiance des exchanges
+    fig = px.pie(exchange, values='Volume 24h', names='Nom')
+    st.plotly_chart(fig)
+
+    # figure pie avec les volumes normalisés des exchanges
+    st.subheader("Camembert sur volumes normalisés de trade des exchanges")
+    fig = px.pie(exchange, values='Volume 24h normalisé', names='Nom')
+    st.plotly_chart(fig)
 
 
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=df['2020'], y=df['price'], name='prix 2020', line=dict(color='#f4d03f', width=2)))
-fig.add_trace(go.Scatter(x=df['2020'], y=df['price'].resample('M').mean(), name='prix moyen par mois 2020', line=dict(color='royalblue', width=2)))
-fig.add_trace(go.Scatter(x=df['2020'], y=df['price'].resample('W').mean(), name='prix moyen par semaine 2020', line=dict(color='green', width=2)))
-
-#edition de la figure
-fig.update_layout(title = 'Evolution du prix du bitcoin en 2020',
-                    xaxis_title = 'Date',
-                    yaxis_title = 'Prix')
-st.plotly_chart(fig)
-#separation des graphiques
-st.markdown('---')
-
-
-
-#titre
-st.title('Evolution du prix du bitcoin en 2020')
-# checkbox pour afficher les années
-
-# mise en place d'un slider pour choisir l'année venant de la colonne date du dataframe
-year = st.slider('Choisir une année', min_value=df.index.year.min(), max_value=df.index.year.max(), value=df.index.year.min())
-
-df1 = df.loc['2020','price'].resample('W').agg(['mean', 'std', 'min', 'max'])
-
-
-#enlever l'index de la colonne date
-
-st.write('ICI')
-df1.reset_index(inplace=True)
-df1['date'] = df1['date'].dt.strftime('%Y-%m-%d')
-
-st.table(df1.iloc[0:10])
+ 
 
 
 
-fig = px.line(df1, x='date', y=(['mean', 'min', 'max']), title='Time Series with Rangeslider')
-
-fig.update_xaxes(rangeslider_visible=True)
-
-st.plotly_chart(fig)
+    st.markdown('---')
 
 
-#titre du graphique
-st.subheader("Capitalisation du marché")
+
+
+
