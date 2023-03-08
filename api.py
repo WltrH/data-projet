@@ -33,3 +33,19 @@ def get_top10(currency):
     top10 = requests.get('https://api.coingecko.com/api/v3/coins/markets?vs_currency='+currency+'&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=1h%2C24h%2C7d')
     return top10.json()
 
+
+def get_bin_exchange():
+    exchange = requests.get('https://api.coingecko.com/api/v3/exchanges/binance/volume_chart?days=30')
+    return exchange.json()
+
+def get_bit_exchange():
+    exchange = requests.get('https://api.coingecko.com/api/v3/exchanges/coinbase-exchange/volume_chart?days=30')
+    return exchange.json()
+
+def get_exchange_simple():
+    exchange = requests.get('https://api.coingecko.com/api/v3/exchanges')
+    return exchange.json()
+
+
+
+
