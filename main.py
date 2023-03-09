@@ -183,7 +183,7 @@ with st.container ():
     df = df.drop(columns=['index'])
     df = df.rename(columns={'Pays': 'Country'})
 
-    #st.write(df)
+    st.write(df)
 
     # nouveau dataframe avec les données du csv worldcities.csv
     df2 = pd.read_csv('worldcities.csv')
@@ -210,6 +210,58 @@ with st.container ():
     st.plotly_chart(fig)
 
 st.markdown('---')
+
+with st.container():
+    # volume de trade des exchanges sur map
+    st.subheader("Volume de trade des exchanges sur map")
+
+    # récupération des données dans un dataframe
+    df_data = pd.DataFrame(exchange)
+    #Mise en forme du dataframe des exchanges pour ne récupérer que les colonnes qui nous intéressent
+    #df = exchange[['id', 'name', 'year_established', 'country', 'trust_score', 'trade_volume_24h_btc', 'trade_volume_24h_btc_normalized']]
+    df = df_data
+
+    # création du nouveau dataset pour mettre les volumes de trade sur une map par pays
+    df = pd.DataFrame(df['country'].value_counts())
+    df = df.reset_index()
+    df = df.rename(columns={'index': 'country', 'country': 'nombre_exchanges'})
+    df = df.sort_values(by='nombre_exchanges', ascending=False)
+    df = df.head(100)
+    df = df.reset_index()
+    df = df.drop(columns=['index'])
+    df = df.rename(columns={'country': 'Country'})
+
+    # merge avec le dataframe df2 pour récupérer les coordonnées géographiques des exchanges
+    df = pd.merge(df, df2, how='left', left_on='Country', right_on='country')
+    # on ne garde que les exchanges avec une capital = primary
+    df = df[df['capital'] == 'primary']
+
+    # rajout des volumes de trade des exchanges
+    df = pd.merge(df, df_data, how='left', left_on='Country', right_on='country')
+
+    # on regroupe les volumes de trade par pays
+    df = df.groupby(['Country', 'nombre_exchanges', 'city', 'lat', 'lng']).sum()
+    df = df.reset_index()
+    df = df.drop(columns=['year_established', 'trust_score'])
+    df = df.rename(columns={'city': 'City', 'lat': 'latitude', 'lng': 'longitude'})
+    df = df.sort_values(by='trade_volume_24h_btc', ascending=False)
+    df = df.head(100)
+    df = df.reset_index()
+    df = df.drop(columns=['index'])
+
+
+    # map en 3D avec les volumes de trade des exchanges par pays
+    fig = px.scatter_3d(df, x='longitude', y='latitude', z='trade_volume_24h_btc', color='Country', size='trade_volume_24h_btc', hover_name='Country', size_max=20, opacity=0.7)
+    st.plotly_chart(fig)
+
+
+    # figure avec bubble map sur les volumes de trade des exchanges
+    st.subheader("Bubble map sur les volumes de trade des exchanges")
+    fig = px.scatter_geo(df, locations="Country", locationmode='country names', color="Country", hover_name="Country", size="trade_volume_24h_btc", projection="natural earth")
+    st.plotly_chart(fig)
+
+st.markdown('---')
+
 
 with st.container():
     # titre sur les scores de confiance des exchanges
