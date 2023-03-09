@@ -22,7 +22,7 @@ layout = "centered"
 st.set_page_config(page_title=page_title, page_icon=page_icon, layout=layout)
 st.title(page_title + " " + page_icon)
 
-################### SIDEBAR ####################
+#################################################
 # variable de date du jour
 
 #liste des crypto monnaies bitcoin, ethereum, tether, ripple
@@ -56,6 +56,8 @@ exchange_simple = api.get_exchange_simple()
 # transformation des données en dataframe
 top10_brut = pd.DataFrame(top10)
 exchange = pd.DataFrame(exchange_simple)
+
+
 
 
 ################### Données du TOP 10 ####################
@@ -183,7 +185,6 @@ with st.container ():
     df = df.drop(columns=['index'])
     df = df.rename(columns={'Pays': 'Country'})
 
-    st.write(df)
 
     # nouveau dataframe avec les données du csv worldcities.csv
     df2 = pd.read_csv('worldcities.csv')
@@ -313,6 +314,8 @@ with st.container():
 
     st.markdown('---')
 
-
+# image de CoinGecko
+st.header("Powerded by :")
+st.image('img/logo.png', use_column_width=True)
 
 
