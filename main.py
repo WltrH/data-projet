@@ -1,5 +1,4 @@
 import streamlit as st
-import time
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -8,7 +7,6 @@ import altair as alt
 import plotly.express as px
 import plotly.graph_objects as go
 import api as api
-import datetime
 import warnings
 
 from streamlit_extras import dataframe_explorer
@@ -120,8 +118,25 @@ with st.container():
     # renommer les colonnes
     df = df.rename(columns={'id': 'Nom', 'current_price': 'Prix', 'high_24h': 'Haut 24h', 'low_24h': 'Bas 24h', 'price_change_percentage_24h': 'Variation % 24h'})
 
-    
+################################################ Crypto ###############################################
+with st.container():
 
+    # titre figure sur les crypto monnaies
+    st.subheader("Graphique sur les crypto-monnaies")
+
+    # récupération des données dans un dataframe
+    df = pd.DataFrame(top10_brut)
+
+
+    # graphique nuage de point sur les prix des crypto monnaies
+    fig = px.scatter(df, x='current_price', y='market_cap', color='id', size='market_cap', hover_name='id', log_x=True, size_max=60)
+    st.plotly_chart(fig)
+
+
+    fig = px.bar(df, x='id', y='price_change_percentage_24h', color='price_change_percentage_24h', color_continuous_scale='Viridis')
+    st.plotly_chart(fig)
+
+  
    
 ################### EXCHANGES ####################
 with st.container():
