@@ -16,57 +16,33 @@ warnings.filterwarnings('ignore')
 
 
 ####################Setting######################
-page_title = "Crypto-Monnaies Data"
+page_title = "Analyses Crypto-Monnaies"
 page_icon = ":bar_chart:"
 layout = "centered"
 st.set_page_config(page_title=page_title, page_icon=page_icon, layout=layout)
 st.title(page_title + " " + page_icon)
 
 #################################################
-# variable de date du jour
+# présentation de l'application
+st.write('L\'application récupère les données en direct depuis une API de marché de crypto-monnaies et permet de sélectionner différentes options telles que la monnaie et les crypto-monnaies à afficher.L\'application affiche également les graphiques et les tableaux pertinents pour aider à visualiser et analyser les données de marché des crypto-monnaies. Enfin, elle permet d\'afficher le Top10 des crypto-monnaies en termes de capitalisation boursière et d\'afficher les données de chaque crypto-monnaie individuellement.')
 
-#liste des crypto monnaies bitcoin, ethereum, tether, ripple
 
-#end_date = datetime.date.today()
-#start_date = end_date - datetime.timedelta(days=1095)
-
-# mettre les données dans un dataframe en connectant directement à l'API
-#btc = pd.Dataframe(cg.get_coin_market_chart_range_by_id(id=id1, vs_currency=currency, from_timestamp=start_date, to_timestamp=end_date))
-# placement d'une liste déroulante pour choisir la currency en passant par la fonction api.currencies
 currency = 'usd'
-
-# placement d'une liste pour choisir l'id de la crypto monnaie
-id1 = 'bitcoin'
-
-# placement d'une case pour choisir le second id de la crypto monnaie, mise à eth en default
-id2 =  'ethereum'
-
-#end_date_aff = end_date.strftime("%Y-%m-%d")
-#start_date_aff = start_date.strftime("%Y-%m-%d")
-
-#start_date = int(time.mktime(datetime.datetime.strptime(str(start_date), "%Y-%m-%d").timetuple()))
-#end_date = int(time.mktime(datetime.datetime.strptime(str(end_date), "%Y-%m-%d").timetuple()))
-
 
 # Récupération des données en passant par les fonctions de l'API
 top10 = api.get_top10(currency)
 exchange_simple = api.get_exchange_simple()
-
 
 # transformation des données en dataframe
 top10_brut = pd.DataFrame(top10)
 exchange = pd.DataFrame(exchange_simple)
 
 
-
-
 ################### Données du TOP 10 ####################
 
 with st.container():
-    st.write('TOP10 des Crypto monnaies par capitalisation')
-    # récuéprer les données dans un dataframe le top10 du marché
-    #top10 = pd.DataFrame(cg.get_coins_markets(vs_currency=currency, order='market_cap_desc', per_page=10, page=1, sparkline=False, price_change_percentage='1h,24h,7d'))
-
+    st.subheader(' Dataset du top 10 des Crypto monnaies par capitalisation mis en forme')
+    
     #mise en forme du dataframe top10 pour ne récupérer que les colonnes qui nous intéressent
     top10 = top10_brut[['id','market_cap', 'current_price', 'fully_diluted_valuation', 'total_volume', 'high_24h', 'low_24h', 'price_change_24h', 'price_change_percentage_24h', 'market_cap_change_24h', 'market_cap_change_percentage_24h', 'circulating_supply', 'total_supply']]
     # renommer les colonnes
@@ -91,7 +67,7 @@ with st.container():
 
 with st.container():
     # Titre
-    st.subheader("Graphique sur le TOP 10 au dessus")
+    st.subheader("Analyses sur le top 10 des crypto-monnaies")
 
     #mise en forme du dataframe top10 pour ne récupérer que les colonnes qui nous intéressent
     top10 = top10_brut[['id','market_cap', 'current_price', 'fully_diluted_valuation', 'total_volume', 'high_24h', 'low_24h', 'price_change_24h', 'price_change_percentage_24h', 'market_cap_change_24h', 'market_cap_change_percentage_24h', 'circulating_supply', 'total_supply']]
@@ -110,35 +86,25 @@ with st.container():
 
     st.markdown('---')
 
-with st.container():
-    # titre sur les volumes des exchanges sur 24h des top 10
-    st.subheader(" Graphique des prix des 10 premières crypto-monnaies sur 24h")
-
-    # récupération des données dans un dataframe
-    df = top10_brut[['id', 'current_price', 'high_24h', 'low_24h', 'price_change_percentage_24h']]
-
-    # renommer les colonnes
-    df = df.rename(columns={'id': 'Nom', 'current_price': 'Prix', 'high_24h': 'Haut 24h', 'low_24h': 'Bas 24h', 'price_change_percentage_24h': 'Variation % 24h'})
 
 ################################################ Crypto ###############################################
 with st.container():
 
     # titre figure sur les crypto monnaies
-    st.subheader("Graphique sur les crypto-monnaies")
+    st.subheader("Volumes du Market Cap des 10 premières crypto-monnaies sur 24h")
 
     # récupération des données dans un dataframe
     df = pd.DataFrame(top10_brut)
-
 
     # graphique nuage de point sur les prix des crypto monnaies
     fig = px.scatter(df, x='current_price', y='market_cap', color='id', size='market_cap', hover_name='id', log_x=True, size_max=60)
     st.plotly_chart(fig)
 
+    st.subheader("Histoganme des variations des 10 premières crypto-monnaies sur 24h")
 
     fig = px.bar(df, x='id', y='price_change_percentage_24h', color='price_change_percentage_24h', color_continuous_scale='Viridis')
     st.plotly_chart(fig)
 
-  
    
 ################### EXCHANGES ####################
 with st.container():
@@ -146,13 +112,12 @@ with st.container():
     st.subheader("Dataset des Exchanges mis en forme")
 
     #mise en forme du dataframe
-
     # récupération des données dans un dataframe
     #Mise en forme du dataframe des exchanges pour ne récupérer que les colonnes qui nous intéressent
     df = pd.DataFrame(exchange)
     df = df[['id', 'name', 'year_established', 'country', 'trust_score', 'trade_volume_24h_btc', 'trade_volume_24h_btc_normalized']]
 
-    st.write(df)
+   
     # mise en place d'une map avec la localisation des exchanges    
     # récupération des données dans un dataframe
     df = pd.DataFrame(exchange)
@@ -163,11 +128,8 @@ with st.container():
     #mise en forme des données
     df['Volume 24h'] = df['Volume 24h'].apply(lambda x: str(round(x, 2)) + ' BTC')
     df['Volume 24h normalisé'] = df['Volume 24h normalisé'].apply(lambda x: str(round(x, 2)) + ' BTC')
-    #mise en forme des données en pourcentage
-    df['Score de confiance'] = df['Score de confiance'].map('{:,.2f}%'.format)
-    #mise en forme des données en pourcentage
-    df['Année de création'] = df['Année de création'].map('{:,.0f}'.format)
     
+    st.write(df)
 
 
     st.markdown('---')
@@ -200,11 +162,13 @@ with st.container ():
     df = df.rename(columns={'city': 'City', 'lat': 'latitude', 'lng': 'longitude'})
     #st.write(df)
 
-    st.subheader("Localisation des exchanges")
+    st.subheader("Localisation des exchanges dans le monde")
     # placement des points sur la map
     st.map(df, zoom=1, use_container_width=True)
 
-    st.subheader("Camembert des exchanges par pays")
+    st.markdown('---')
+
+    st.subheader("Pourcentage des exchanges situé dans le monde par pays")
     # figure pie avec les pays et le nombre d'exchanges présent
 
     fig = px.pie(df, values='Nombre d\'exchanges', names='Country')
@@ -214,7 +178,7 @@ st.markdown('---')
 
 with st.container():
     # volume de trade des exchanges sur map
-    st.subheader("Volume de trade des exchanges sur map")
+    st.subheader("Volume de trade des exchanges dans le monde")
 
     # récupération des données dans un dataframe
     df_data = pd.DataFrame(exchange)
@@ -255,63 +219,61 @@ with st.container():
     fig = px.scatter_3d(df, x='longitude', y='latitude', z='trade_volume_24h_btc', color='Country', size='trade_volume_24h_btc', hover_name='Country', size_max=20, opacity=0.7)
     st.plotly_chart(fig)
 
+    st.markdown('---')
+
+    # garder dans le dataset que certaines données
+    df = df[['Country', 'longitude', 'latitude', 'trade_volume_24h_btc']]
 
     # figure avec bubble map sur les volumes de trade des exchanges
-    st.subheader("Bubble map sur les volumes de trade des exchanges")
+    st.subheader("Volumes de trade des exchanges par pays dans le monde")
     fig = px.scatter_geo(df, locations="Country", locationmode='country names', color="Country", hover_name="Country", size="trade_volume_24h_btc", projection="natural earth")
     st.plotly_chart(fig)
 
-st.markdown('---')
+    st.markdown('---')
+
+    # figure camembert sur les volumes de trade des exchanges par pays
+    st.subheader("Volumes de trade des exchanges par pays")
+    fig = px.pie(df, values='trade_volume_24h_btc', names='Country')
+    st.plotly_chart(fig)
+
+    st.markdown('---')
 
 
 with st.container():
     # titre sur les scores de confiance des exchanges
-    st.subheader("Volumes d'échanges des exchanges")
+    st.subheader("Volumes des trades des exchanges")
 
     df = pd.DataFrame(exchange)
 
     df = df.head(20)
 
-    # figure en barre sur les volumes d'échanges des exchanges
-    fig = px.bar(df, x='name', y='trade_volume_24h_btc', color='trade_volume_24h_btc', color_continuous_scale='Viridis')
-    st.plotly_chart(fig)
-
     # figure en camembert sur les volumes d'échanges des exchanges
-    st.subheader("Camembert sur volumes de trade des exchanges")
+    st.subheader("Pourcentage des volumes de trade des exchanges sur 24h en BTC")
     fig = px.pie(df, values='trade_volume_24h_btc', names='name')
     st.plotly_chart(fig)
+    st.markdown ('---')
 
     # figure de nuage de point sur les volumes d'échanges par exchanges
-    st.subheader("Nuage de points sur volumes de trade des exchanges")
+    st.subheader("Volumes de trade des exchanges en BTC sur 24h sans Binance")
+    df = df[df['name'] != 'Binance']
     fig = px.scatter(df, x='name', y='trade_volume_24h_btc', color='trade_volume_24h_btc', color_continuous_scale='Viridis')
     st.plotly_chart(fig)
+    st.markdown('---')
 
     # figure pairplot sur les volumes d'échanges par exchanges
-    st.subheader("Pairplot sur volumes de trade des exchanges")
     fig = px.scatter_matrix(df, dimensions=['name', 'trade_volume_24h_btc'], color='trade_volume_24h_btc')
     st.plotly_chart(fig)
+    st.markdown('---')
 
-    # figure altair sur les volumes d'échanges par exchanges
-    st.subheader("Altair sur volumes de trade des exchanges")
-    fig = alt.Chart(df).mark_circle().encode(
-        x='name',
-        y='trade_volume_24h_btc',
-        color='trade_volume_24h_btc',
-        tooltip=['name', 'trade_volume_24h_btc']
-    )
-    st.altair_chart(fig, use_container_width=True)
+    st.subheader(" Volumes de trade normalisés des exchanges sur 24h en BTC sans Binance")
 
-    # figure altair sur les volumes d'échages normalisés par exchanges
-    st.subheader("Altair sur volumes normalisés de trade des exchanges")
-    fig = alt.Chart(df).mark_circle().encode(
-        x='name',
-        y='trade_volume_24h_btc_normalized',
-        color='trade_volume_24h_btc_normalized',
-        tooltip=['name', 'trade_volume_24h_btc_normalized']
-    )
-    st.altair_chart(fig, use_container_width=True)
+    fig = px.scatter_3d(df, x='name', y='trade_volume_24h_btc_normalized', z='trade_volume_24h_btc', color='trade_volume_24h_btc', size='trade_volume_24h_btc', hover_name='name', size_max=20, opacity=0.7)
+    st.plotly_chart(fig)
+    st.markdown('---')
 
-
+    #st.subheader(" Volumes de trade normalisés des exchanges sur 24h en BTC sans Binance")
+    fig = px.scatter(df, x='name', y='trade_volume_24h_btc_normalized', color='trade_volume_24h_btc', color_continuous_scale='Viridis')
+    st.plotly_chart(fig)
     st.markdown('---')
 
 # image de CoinGecko
