@@ -28,14 +28,6 @@ with st.sidebar.header("Menu"):
         st.experimental_rerun()
     st.sidebar.markdown('---')
 
-   
-    
-    #if selected == 'Accueil':
-        
-
-    # menu de navigation
-    #page = st.sidebar.radio("Choisissez une page", ('Accueil', 'Top 10', 'Analyse des crypto-monnaies', 'Analyse des crypto-monnaies individuelles'))
-
 #############################################
 
 
