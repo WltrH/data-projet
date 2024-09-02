@@ -31,5 +31,4 @@ This will launch the app on your browser, where you can select different options
 
 ---
 
-### Contributors
-This project was created by Guillaume-Walter Hornig. If you have any questions or suggestions, feel free to contact us at Wltrh@gmail.com.
+a
